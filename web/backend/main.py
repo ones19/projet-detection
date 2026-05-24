@@ -7,8 +7,9 @@ from datetime import datetime
 import os
 import requests as req
 
-app = FastAPI() # cree le serveru fastapi
 
+app = FastAPI() # cree le serveru fastapi
+PI_URL = "http://172.20.10.2:8001" # adresse de la Pi
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -66,7 +67,7 @@ async def add_personne(nom: str, photo: UploadFile = File(...)):
     # Forward vers la Pi
     try:
         req.post(
-            "http://172.20.10.2:8001/bd/ajouter",
+            f"{PI_URL}/bd/ajouter",
             data={"nom": nom},
             files={"photo": (photo.filename, contenu, photo.content_type)},
             timeout=5
@@ -86,7 +87,7 @@ def delete_personne(nom: str):
 
     # Supprime aussi le dossier sur la Pi
     try:
-        req.delete(f"http://172.20.10.2:8001/bd/supprimer/{nom}", timeout=5)
+        req.delete(f"{PI_URL}/bd/supprimer/{nom}", timeout=5)
     except Exception as e:
         print(f"[PI] Erreur suppression BD : {e}")
 
