@@ -6,7 +6,7 @@ export default function BD() {
   const [persons, setPersons] = useState([])
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
-  const [photos, setPhotos] = useState([]) // tableau de photos
+  const [photos, setPhotos] = useState([]) 
   const [mode, setMode] = useState('file')
   const [cameraActive, setCameraActive] = useState(false)
 
@@ -79,16 +79,28 @@ export default function BD() {
 
   async function addPerson() {
     if (!name.trim() || photos.length === 0) return
-    for (let i = 0; i < photos.length; i++) {
-      const form = new FormData()
-      form.append('nom', name.trim())
-      form.append('photo', photos[i].file)
-      await fetch(`${API}/personnes?nom=${encodeURIComponent(name.trim())}`, {
-        method: 'POST', body: form,
-      })
+    try {
+      for (let i = 0; i < photos.length; i++) {
+        const form = new FormData()
+        form.append('nom', name.trim())
+        form.append('photo', photos[i].file)
+
+        const response = await fetch(`${API}/personnes`, {
+          method: 'POST',
+          body: form,
+        })
+
+        if (!response.ok) {
+          const message = await response.text()
+          throw new Error(`photo ${i + 1}: ${response.status} ${message}`)
+        }
+      }
+
+      resetForm()
+      fetchPersons()
+    } catch (error) {
+      alert(`Impossible d'enregistrer la personne : ${error.message}`)
     }
-    resetForm()
-    fetchPersons()
   }
 
   async function deletePerson(nom) {
@@ -148,7 +160,7 @@ export default function BD() {
             <div style={{ marginBottom: 14 }}>
               {!cameraActive && (
                 <button onClick={ouvrirCamera} style={{ fontSize: 13, marginBottom: 8 }}>
-                   Ouvrir la caméra
+                  Ouvrir la caméra
                 </button>
               )}
               <video ref={videoRef} autoPlay playsInline style={{
@@ -160,7 +172,7 @@ export default function BD() {
               {cameraActive && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                   <button onClick={prendrePhoto} className="primary" style={{ fontSize: 13 }}>
-                    📸 Capturer
+                     Capturer
                   </button>
                   <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
                     {photos.length} photo{photos.length > 1 ? 's' : ''} prise{photos.length > 1 ? 's' : ''}
@@ -174,7 +186,7 @@ export default function BD() {
           {photos.length > 0 && (
             <div style={{ marginBottom: 14 }}>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                ✅ {photos.length} photo{photos.length > 1 ? 's' : ''} — plus t'en as, mieux c'est !
+                 {photos.length} photo{photos.length > 1 ? 's' : ''} — plus t'en as, mieux c'est !
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                 {photos.map((p, i) => (

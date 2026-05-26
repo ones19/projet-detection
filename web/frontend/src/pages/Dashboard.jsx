@@ -13,12 +13,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDetections()
-    const interval = setInterval(fetchDetections, 3000) // rafraîchit toutes les 3s
+    const interval = setInterval(fetchDetections, 3000) 
     return () => clearInterval(interval)
   }, [])
 
-  const today = new Date().toISOString().slice(0, 10) //recupere date daujourdhui 
-  const todayDetections = detections.filter(d => d.date === today) //filtre les detections daujourdhui
+  const today = new Date().toISOString().slice(0, 10) 
+  const todayDetections = detections.filter(d => d.date === today) 
   const known = todayDetections.filter(d => d.connu).length
   const unknown = todayDetections.filter(d => !d.connu).length
 
@@ -74,7 +74,7 @@ export default function Dashboard() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 15, fontWeight: 500 }}>{d.nom}</div>
                 <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 2 }}>
-                  {d.date} · ArcFace
+                  {d.date} · FaceNet512
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5 }}>

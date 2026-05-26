@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+sqlalchemy
+python-multipart
+requests
+opencv-python
+numpy
+# ultralytics and deepface are optional / heavy
+ultralytics
+deepface
+# torch installation should follow official instructions for your platform
+# torchvision

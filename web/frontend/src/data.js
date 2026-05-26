@@ -1,10 +1,10 @@
 
   export function certitudeKnown(distance) {
-    return Math.round((1 - distance / 0.6) * 100)
+    return Math.round((1 - distance / 0.5) * 100)
   }
 
   export function certitudeUnknown(distance) {
-    return Math.round(((distance - 0.6) / 0.4) * 100)
+    return Math.round(((distance - 0.5) / 0.5) * 100)
 }
 
 export function getCertitude(connu, distance) {

@@ -5,7 +5,6 @@ Ce projet fonctionne avec une architecture a 2 machines:
 - **Raspberry Pi**: traitement camera (detection/reconnaissance) + mini backend BD.
 - **PC**: application web complete (backend principal + frontend React).
 
-Le frontend ne parle jamais a la Raspberry directement. Tout passe par le backend PC.
 
 ---
 
@@ -242,24 +241,6 @@ Depuis la Pi, verifier que le backend PC repond:
 curl http://IP_DU_PC:8000/detections
 ```
 
----
-
-## 9) Problemes frequents
-
-**Timeout entre PC et Pi:**
-- Verifier les IP dans les fichiers de configuration
-- Verifier que les ports 8000 et 8001 sont ouverts
-
-**Aucune detection remontee:**
-- Verifier `backend_url` dans `pi/test_finale.py`
-- Verifier que le backend PC tourne sur `0.0.0.0:8000`
-
-**Ajout personne OK sur PC mais pas sur Pi:**
-- Verifier `PI_URL` dans `web/backend/main.py`
-- Verifier que `bd_server.py` tourne sur la Pi (port 8001)
-
----
-
 ## 10) Resume d'exploitation
 
 | Composant | Machine | Commande |
@@ -268,3 +249,70 @@ curl http://IP_DU_PC:8000/detections
 | test_finale.py | Raspberry Pi | `python test_finale.py` |
 | main.py | PC | `uvicorn main:app --host 0.0.0.0 --port 8000` |
 | Frontend React | PC | `npm run dev` |
+
+---
+
+## 11) Fichiers à configurer
+
+Avant de lancer le projet, vérifie et adapte ces valeurs dans les fichiers indiqués :
+
+- Raspberry Pi (envoi des détections vers le PC) : modifier `backend_url` dans `pi/test_finale.py`
+  ```py
+  backend_url = "http://<IP_DU_PC>:8000"
+  ```
+- Backend PC (forward vers la Pi pour la BD) : modifier `PI_URL` dans `web/backend/main.py`
+  ```py
+  PI_URL = "http://<IP_DE_LA_PI>:8001"
+  ```
+- Frontend (URL API) : modifier `API` dans `web/frontend/src/data.js`
+  ```js
+  export const API = "http://<IP_DU_PC>:8000"
+  ```
+
+Remplace `<IP_DU_PC>` et `<IP_DE_LA_PI>` par les adresses IP réelles de tes machines sur le réseau local.
+
+## 12) Tests manuels (curl)
+
+Utiles pour vérifier rapidement que chaque composant répond :
+
+- Lister les personnes (backend PC)
+```bash
+curl http://<IP_DU_PC>:8000/personnes
+```
+
+- Ajouter une personne (envoi d'un fichier, test depuis PC)
+```bash
+curl -X POST "http://<IP_DU_PC>:8000/personnes" \
+  -F "nom=Curtis" \
+  -F "photo=@/chemin/vers/photo.jpg"
+```
+
+- Supprimer une personne
+```bash
+curl -X DELETE "http://<IP_DU_PC>:8000/personnes/Curtis"
+```
+
+- Vérifier le mini-backend sur la Pi (Swagger UI)
+```bash
+curl http://<IP_DE_LA_PI>:8001/docs
+```
+
+
+
+## 13) Dépendances et installation
+
+Un fichier `requirements.txt` est fourni avec les dépendances recommandées. Pour installer :
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Remarque sur `torch` : l'installation varie selon GPU/CPU et plateforme. Si tu n'as pas besoin d'accélération GPU, installe la version CPU de torch comme indiqué dans la doc officielle.
+
+
+## 14) Troubleshooting rapide
+
+- Si le frontend n'affiche rien pour les personnes : vérifie que `web/backend` tourne et que `GET /personnes` renvoie un JSON.
+- Si l'ajout depuis le frontend ne fonctionne pas : vérifier `API` dans `web/frontend/src/data.js` et regarder les logs du backend (`uvicorn main:app`).
+- Si la Pi ne peut pas joindre le PC : vérifier `backend_url` dans `pi/test_finale.py` et que les ports 8000/8001 sont accessibles.
+- Si appareil photo non accessible : vérifier les droits/driver (Picamera2) et essayer une photo locale.

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
@@ -8,13 +8,13 @@ import os
 import requests as req
 
 
-app = FastAPI() # cree le serveru fastapi
-PI_URL = "http://172.20.10.2:8001" # adresse de la Pi
+app = FastAPI() 
+PI_URL = "http://<IP_DE_LA_PI>:8001" 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
-    allow_methods=["*"], #autorise toutes les méthodes HTTP : GET, POST, DELETE...
-    allow_headers=["*"], #autorise tous les headers HTTP
+    allow_methods=["*"], 
+    allow_headers=["*"], 
 )
 
 # ── Base de données ──
@@ -43,20 +43,19 @@ Base.metadata.create_all(engine)
 # ── Routes Personnes ──
 @app.get("/personnes")
 def get_personnes():
-    db = Session() # ouvre une session de base de données
+    db = Session() 
     personnes = db.query(Personne).all()
     db.close()
     return [{"id": p.id, "nom": p.nom, "photo_path": p.photo_path} for p in personnes]
 
 @app.post("/personnes")
-async def add_personne(nom: str, photo: UploadFile = File(...)):
+async def add_personne(nom: str = Form(...), photo: UploadFile = File(...)):
     os.makedirs("photos", exist_ok=True)
     contenu = await photo.read()
     path = f"photos/{nom}_{photo.filename}"
     with open(path, "wb") as f:
         f.write(contenu)
 
-    # Ajoute en base seulement si elle existe pas déjà
     db = Session()
     existe = db.query(Personne).filter(Personne.nom == nom).first()
     if not existe:
@@ -64,7 +63,6 @@ async def add_personne(nom: str, photo: UploadFile = File(...)):
         db.commit()
     db.close()
 
-    # Forward vers la Pi
     try:
         req.post(
             f"{PI_URL}/bd/ajouter",
@@ -85,7 +83,6 @@ def delete_personne(nom: str):
     db.commit()
     db.close()
 
-    # Supprime aussi le dossier sur la Pi
     try:
         req.delete(f"{PI_URL}/bd/supprimer/{nom}", timeout=5)
     except Exception as e:
